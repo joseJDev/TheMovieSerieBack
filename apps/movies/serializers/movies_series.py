@@ -9,7 +9,12 @@ from apps.movies.models import (
     ViewsMoviesSeries
 )
 
+from apps.user.models import User
 
+class UserScoreSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'first_name', 'last_name', 'profile']
 class GenderMoviesSeriesSerializer(serializers.ModelSerializer):
     class Meta:
         model = GenderMovieSeries
@@ -31,6 +36,11 @@ class ViewsMovieSeriesSerializers(serializers.ModelSerializer):
         
         return attrs
 
+class ScoreMovieSeriesListSerializer(serializers.ModelSerializer):
+    user = UserScoreSerializer()
+    class Meta:
+        model = ScoreMovieSeries
+        exclude = ['is_active']
 class ScoreMovieSeriesSerializer(serializers.ModelSerializer):
     class Meta:
         model = ScoreMovieSeries
@@ -57,8 +67,8 @@ class MovieSeriesSerializer(serializers.ModelSerializer):
         exclude = ['is_active', 'modified']
 
     def get_scores(self, instance):
-        scores = ScoreMovieSeries.objects.filter(is_active = True, movie_serie = instance.id)
-        ser = ScoreMovieSeriesSerializer(scores, many=True)
+        scores = ScoreMovieSeries.objects.filter(movie_serie = instance.id)
+        ser = ScoreMovieSeriesListSerializer(scores, many=True)
         return ser.data
     
     def get_views(self, instance):

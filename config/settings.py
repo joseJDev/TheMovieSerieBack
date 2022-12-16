@@ -47,11 +47,14 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
+    'cloudinary_storage',
+    'cloudinary',
     'apps.user',
     'apps.movies',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -160,6 +163,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 #CORS
 CORS_ALLOW_ALL_ORIGINS = True
+
 CORS_ORIGIN_ALLOW_ALL = True 
 
 CORS_ALLOW_METHODS = [
@@ -183,3 +187,14 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
     'AccessAuth'
 ]
+
+# CLOUDINARY
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': env('CLOUD_NAME'),
+    'API_KEY': env('CLOUD_API_KEY'),
+    'API_SECRET': env('CLOUD_API_SECRET')
+}
+
+MEDIA_URL = '/media/'
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.RawMediaCloudinaryStorage'
+MAX_UPLOAD_SIZE = "20971520"

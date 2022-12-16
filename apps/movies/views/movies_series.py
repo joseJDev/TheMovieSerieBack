@@ -11,14 +11,16 @@ from rest_framework.decorators import action
 from apps.movies.models import (
     MovieSeries,
     ScoreMovieSeries,
-    ViewsMoviesSeries
+    ViewsMoviesSeries,
+    GenderMovieSeries
 )
 
 # Serializers
 from apps.movies.serializers import (
     MovieSeriesSerializer, 
     ScoreMovieSeriesSerializer,
-    ViewsMovieSeriesSerializers
+    ViewsMovieSeriesSerializers,
+    GenderMoviesSeriesSerializer
 )
 
 # Filters
@@ -52,22 +54,60 @@ class MoviesSeriesFilter(django_filters.FilterSet):
             Q(average__lt=value+1)
         )
 
+
+class TypeGenderView(viewsets.ModelViewSet):
+    queryset = GenderMovieSeries.objects.all()
+    serializer_class = GenderMoviesSeriesSerializer
+    permission_classes = [IsAuthenticated]
+
 class MoviesSeriesView(viewsets.ModelViewSet):
     queryset = MovieSeries.objects.filter(is_active = True)
     serializer_class = MovieSeriesSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
     filter_backends = [SearchFilter, filters.DjangoFilterBackend, OrderingFilter]
     filterset_class = MoviesSeriesFilter
     search_fields = [
         'name'
     ]
 
+    def isview(self, user_id, content_id):
+        return ViewsMoviesSeries.objects.filter(
+            movie_serie = content_id,
+            user = user_id
+        ).exists()
+    
+    def isscore(self, user_id, content_id):
+        return ScoreMovieSeries.objects.filter(
+            movie_serie = content_id,
+            user = user_id 
+        ).exists()
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        res = {
+            'data': serializer.data,
+            'is_view': self.isview(request.user.id, instance.id),
+            'is_score': self.isscore(request.user.id, instance.id)
+        }
+        return Response(res)
+
 
     @action(detail=False, methods=['GET'])
     def random(self, request, *args, **kwargs):
         queryset = MovieSeries.objects.filter(is_active = True).order_by('?').first()
         ser = self.serializer_class(queryset)
-        return Response(ser.data)
+        
+        res = {
+            'data': ser.data,
+            'is_view': self.isview(request.user.id, queryset.id),
+            'is_score': self.isscore(request.user.id, queryset.id)
+        }
+
+        return Response(res)
+    
+
+
 
 class ScoreMovieSeriesView(viewsets.GenericViewSet, mixins.CreateModelMixin):
     queryset = ScoreMovieSeries.objects.filter(is_active=True)
@@ -96,18 +136,3 @@ class ViewsMovieSerieView(viewsets.GenericViewSet, mixins.CreateModelMixin):
         self.perform_create(serializer)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     
-    @action(detail=False, methods=['GET'])
-    def validateview(self, request, *args, **kwargs):
-        movie_serie = request.GET.get('movie_serie', None)
-        user = request.user
-
-        exist_view = ViewsMoviesSeries.objects.filter(
-            movie_serie = movie_serie,
-            user = user.id
-        )
-
-        is_view = False
-        if exist_view.exists():
-            is_view = True
-        
-        return Response({'is_view': is_view})

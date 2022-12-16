@@ -42,6 +42,8 @@ class UserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.pop('password_confirm')
         password = validated_data.pop('password')
+        groups = validated_data.pop('groups')
+        validated_data.pop('user_permissions')
 
         user = User.objects.create(**validated_data)
         user.set_password(password)
@@ -68,6 +70,7 @@ class UserLoginSerializer(serializers.Serializer):
         return attrs
 
     def create(self, validated_data):
+        
         user = self.context['user']
         token, created = Token.objects.get_or_create(user=user)
 

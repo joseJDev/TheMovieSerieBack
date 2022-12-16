@@ -20,6 +20,14 @@ class User(AbstractUser, AlternovaModel):
         blank=True, 
         null=True
     )
+
+    profile = models.ImageField(
+        upload_to='media/profiles/',
+        max_length=255, 
+        null=True,
+        blank=True
+    )
+    
     
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name', 'username']

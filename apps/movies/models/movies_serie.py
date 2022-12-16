@@ -38,6 +38,13 @@ class MovieSeries(AlternovaModel):
         max_length = 150,
         choices=TYPE_STREAMING
     )
+
+    image = models.ImageField(
+        upload_to='media/movie-series/',
+        max_length=255, 
+        null=True,
+        blank=True
+    )
     
     average = models.FloatField(default=0)
 
@@ -61,6 +68,7 @@ class ViewsMoviesSeries(AlternovaModel):
         related_name='views_movie_serie', 
         on_delete=models.CASCADE
     )
+
 
     class Meta:
         db_table = "view_movie_serie"
